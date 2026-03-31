@@ -84,7 +84,7 @@ The training scripts load this file from `./EgoSchema/processed_videos.json`.
 
 ## Step 3 (Optional): Install TVCache Client
 
-[TVCache](../tvcache) accelerates training by caching tool execution results across rollouts using a prefix tree. This avoids redundant sandbox calls when multiple rollouts share the same tool call prefix.
+[TVCache](../tvcache) accelerates training by caching tool execution results across rollouts using a Tool Call Graph. This avoids redundant sandbox calls when multiple rollouts share the same tool call prefix.
 
 Install the client library from the sibling directory:
 
@@ -122,13 +122,13 @@ Then run one of the three training scripts:
 
 Caches tool results in a thread-safe dictionary keyed by `(function_name, argument)`. Cache is shared across rollouts within a batch but does not persist across batches.
 
-### With TVCache (prefix-tree caching)
+### With TVCache (TCG caching)
 
 ```bash
 ./run.sh train_with_tvcache.py
 ```
 
-Uses `AsyncSemanticStatefulExecutor` to maintain a prefix tree of tool call sequences per data point. Supports environment forking, prefix reuse across epochs, and warmup of the next batch's environments.
+Uses `AsyncSemanticStatefulExecutor` to maintain a Tool Call Graph of tool call sequences per data point. Supports environment forking, prefix reuse across epochs, and warmup of the next batch's environments.
 
 ## Training Configuration
 
