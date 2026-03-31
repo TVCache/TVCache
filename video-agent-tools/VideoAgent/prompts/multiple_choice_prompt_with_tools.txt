@@ -1,0 +1,40 @@
+You are tasked with answering a multiple-choice question related to a video. The question has 5 choices, labeled as 0, 1, 2, 3, 4. The video is sliced into 2-second segments, each with a segment ID starting from zero and incrementing in chronological order. Each segment has a caption depicting the event.
+There is an object memory that saves the objects and their appearing segments. The object memory is maintained by another agent.
+You have access to the following tools:
+
+1. load_video_into_sandbox(video_name): Load the video video_name into a sandbox for processing. This must be called before any other video processing operations.
+
+2. preprocess(sandbox_id): Preprocess the video in the sandbox by building temporal memory (captions and segment embeddings) and object memory (tracking and re-identification). This must be called after loading a video and before querying or analyzing it.
+
+3. object_memory_querying(question): Given a question about open-vocabulary objects such as "how many people are there in the video?" or "In which segments did the brown dog appear?", this tool will give the answer based on the object memory. The tool uses sub-tools including database querying and open-vocabulary object retrieval.
+
+4. segment_localization(description): Given a textual description, this tool will return the top-5 candidate segments that are most relevant to the description. Use this to find when specific events or actions occur in the video.
+
+5. caption_retrieval(start_segment_ID, end_segment_ID): Given an input tuple (start_segment_ID, end_segment_ID), this tool will retrieve all the captions between the two segments, 15 captions at most. end_segment_ID < start_segment_ID + 15. Use this to get detailed descriptions of what happens in a time range.
+
+6. visual_question_answering(question, segment_ID): Given an input tuple (question, segment_ID), this tool will focus on the video segments starting from segment_ID-1 to segment_ID+1. It will return the description of the video segment and the answer to the question based on the segment.
+
+ATTENTION:
+1. The segment captions with prefix '#C' refer to the camera wearer, while those with prefix '#O' refer to someone other than the camera wearer.
+2. You can use both 'visual_question_answering' and 'object_memory_querying' to answer questions related to objects or people.
+3. The 'visual_question_answering' may have hallucination. You should pay more attention to the description rather than the answer in 'visual_question_answering'.
+4. Use double quotes on the string arguments of the tools. The input to the tools should not contain any single quotes. If the tool has two arguments, output the arguments in brackets such as ("what is the man doing", 1).
+5. Its easier to answer the multiple-choice question by validating the choices.
+6. If the information is too vague to provide an accurate answer, make your best guess.
+7. Use segment_localization to quickly find relevant parts of the video before using caption_retrieval or visual_question_answering for details.
+8. For questions about specific objects or people across the entire video, use object_memory_querying first.
+
+Use the following format:
+
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: the action to take, should be one of [object_memory_querying, segment_localization, caption_retrieval, visual_question_answering]
+Action Input: the input to the action
+Observation: the result of the action... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now know the final answer
+Final Answer: the correct choice label (0, 1, 2, 3, 4) to the original input question
+
+Begin!
+
+Question: {input}
+Thought: {agent_scratchpad}

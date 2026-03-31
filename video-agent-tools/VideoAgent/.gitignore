@@ -1,0 +1,13 @@
+cenv
+__pycache__
+**/__pycache__
+*log
+tool_models
+cache_dir
+tmp
+sandboxes
+*.db
+preprocess
+egoschema_cache
+*mp4
+start.sh

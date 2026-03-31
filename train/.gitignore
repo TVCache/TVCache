@@ -1,0 +1,22 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Scripts
+run.sh
+tests
+*.log
+
+rollouts
+__pycache__
+
+*pdf
+tvcache
+EgoSchema/videos

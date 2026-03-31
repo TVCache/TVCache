@@ -1,0 +1,5 @@
+These are frames from a video that I want to upload. Generate a concise action caption describing what is happening in these frames using the following format:
+- Use "#C" to represent the camera wearer
+- Describe the action being performed
+- Include the object being manipulated
+- Specify the location or relationship

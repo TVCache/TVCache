@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Runs - TVCache Visualizer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        header {
+            padding: 2rem;
+            background: #333;
+            color: white;
+            position: relative;
+        }
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 400;
+        }
+        .subtitle {
+            margin-top: 0.5rem;
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+        .header-link {
+            position: absolute;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border: 1px solid white;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .header-link:hover {
+            background: white;
+            color: #333;
+        }
+        .content {
+            padding: 2rem;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #868e96;
+        }
+        .status {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+            text-align: center;
+            color: #666;
+        }
+        .status.error {
+            background: #fee;
+            color: #c33;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        a {
+            color: #0066cc;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: #e3f2fd;
+            color: #0066cc;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .file-size {
+            color: #868e96;
+            font-size: 0.85rem;
+        }            .date {
+                color: #495057;
+                font-size: 0.85rem;
+            }
+            button {
+                background: #333;
+                color: white;
+                border: none;
+                padding: 0.5rem 1rem;
+                cursor: pointer;
+                font-size: 0.85rem;
+                border-radius: 4px;
+                transition: background 0.2s;
+            }
+            button:hover {
+                background: #555;
+            }
+            .btn-delete {
+                background: #dc3545;
+                margin-left: 0.5rem;
+            }
+            .btn-delete:hover {
+                background: #c82333;
+            }
+            .section-header {
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: #333;
+                margin-top: 2rem;
+                margin-bottom: 1rem;
+                padding-bottom: 0.5rem;
+                border-bottom: 2px solid #e0e0e0;
+            }
+            .section-header:first-child {
+                margin-top: 0;
+            }
+            .section-count {
+                color: #868e96;
+                font-size: 0.9rem;
+                font-weight: 400;
+                margin-left: 0.5rem;
+            }
+            .auto-saved-section {
+                margin-top: 3rem;
+                padding-top: 2rem;
+                border-top: 3px solid #f0f0f0;
+            }
+        </style>
+    </head>
+<body>
+    <div class="container">
+        <header>
+            <a href="/" class="header-link">View Current Cache</a>
+            <h1>Available Runs</h1>
+            <div class="subtitle">Select a run to visualize the cached tool call tree</div>
+        </header>
+        <div class="content">
+            <div id="status" class="status">Loading runs...</div>
+            <div id="runs-container"></div>
+        </div>
+    </div>
+
+    <script>
+        async function loadRuns() {
+            const statusEl = document.getElementById('status');
+            const containerEl = document.getElementById('runs-container');
+
+            try {
+                const response = await fetch('/api/runs');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    statusEl.className = 'status error';
+                    statusEl.textContent = data.error;
+                    return;
+                }
+
+                statusEl.style.display = 'none';
+
+                const hasManualRuns = data.manual_runs && data.manual_runs.length > 0;
+                const hasAutoSavedRuns = data.auto_saved_runs && data.auto_saved_runs.length > 0;
+
+                if (!hasManualRuns && !hasAutoSavedRuns) {
+                    containerEl.innerHTML = `
+                        <div class="empty-state">
+                            <p>No runs found in the directory</p>
+                            <p style="margin-top: 0.5rem; font-size: 0.85rem;">${data.base_dir || ''}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+
+                // Manual Saves Section
+                if (hasManualRuns) {
+                    html += `
+                        <div class="section-header">
+                            Manual Saves
+                            <span class="section-count">(${data.manual_runs.length} ${data.manual_runs.length === 1 ? 'run' : 'runs'})</span>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Run</th>
+                                    <th>Tasks</th>
+                                    <th>Size</th>
+                                    <th>Modified</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    data.manual_runs.forEach(run => {
+                        html += createRunRow(run);
+                    });
+
+                    html += `
+                            </tbody>
+                        </table>
+                    `;
+                }
+
+                // Auto-Saved Section
+                if (hasAutoSavedRuns) {
+                    html += `
+                        <div class="auto-saved-section">
+                            <div class="section-header">
+                                Auto-Saved
+                                <span class="section-count">(${data.auto_saved_runs.length} ${data.auto_saved_runs.length === 1 ? 'save' : 'saves'})</span>
+                            </div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Run</th>
+                                        <th>Tasks</th>
+                                        <th>Size</th>
+                                        <th>Modified</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+
+                    data.auto_saved_runs.forEach(run => {
+                        html += createRunRow(run);
+                    });
+
+                    html += `
+                            </tbody>
+                        </table>
+                        </div>
+                    `;
+                }
+
+                containerEl.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading runs:', error);
+                statusEl.className = 'status error';
+                statusEl.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        function createRunRow(run) {
+            const fileSizeMB = (run.file_size / (1024 * 1024)).toFixed(2);
+            return `
+                <tr id="run-${escapeHtml(run.path).replace(/\//g, '-').replace(/:/g, '-')}">
+                    <td><strong>${escapeHtml(run.display_name)}</strong></td>
+                    <td><span class="badge">${run.task_count} tasks</span></td>
+                    <td class="file-size">${fileSizeMB} MB</td>
+                    <td class="date">${escapeHtml(run.modified_date)}</td>
+                    <td>
+                        <a href="/visualizer.html?path=${encodeURIComponent(run.path)}">View Tree</a>
+                        <button class="btn-delete" onclick="deleteRun('${escapeHtml(run.path)}', '${escapeHtml(run.display_name)}')">Delete</button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function deleteRun(path, displayName) {
+            if (!confirm(`Are you sure you want to delete "${displayName}"?\n\nThis action cannot be undone.`)) {
+                return;
+            }
+
+            const statusEl = document.getElementById('status');
+
+            try {
+                statusEl.textContent = 'Deleting...';
+                statusEl.style.display = 'block';
+                statusEl.className = 'status';
+
+                const response = await fetch('/api/delete_run', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ path: path })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusEl.textContent = `Successfully deleted "${displayName}"`;
+                    statusEl.className = 'status';
+                    
+                    // Remove the row from the table
+                    const rowId = `run-${path.replace(/\//g, '-')}`;
+                    const row = document.getElementById(rowId);
+                    if (row) {
+                        row.style.opacity = '0.5';
+                        setTimeout(() => {
+                            row.remove();
+                            // Check if table is now empty
+                            const tbody = document.querySelector('tbody');
+                            if (tbody && tbody.children.length === 0) {
+                                loadRuns(); // Reload to show empty state
+                            }
+                        }, 300);
+                    }
+                } else {
+                    throw new Error(result.error || 'Failed to delete run');
+                }
+            } catch (error) {
+                console.error('Error deleting run:', error);
+                statusEl.textContent = `Error: ${error.message}`;
+                statusEl.className = 'status error';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadRuns);
+    </script>
+</body>
+</html>
