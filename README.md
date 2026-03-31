@@ -2,7 +2,7 @@
   <img src="tvcache/static/tvcachelogo.png" height="150" />
 </p>
 
-# TVCache: Accelerating Agent Training with Tool Call Graphs
+# TVCache: A Stateful Tool-Value Cache for Post-Training LLM Agents
 
 This repository contains TVCache and an end-to-end training example that demonstrates its use. TVCache speeds up RL training of tool-using agents by caching tool execution results in a **Tool Call Graph (TCG)**. TCG is a prefix tree of tool call sequences that enables reuse across rollouts and epochs.
 
