@@ -84,7 +84,7 @@ The training scripts load this file from `./EgoSchema/processed_videos.json`.
 
 ## Step 3: Install TVCache Client
 
-[TVCache](../tvcache) accelerates training by caching tool execution results across rollouts using a Tool Call Graph. This avoids redundant sandbox calls when multiple rollouts share the same tool call prefix.
+[TVCache](../tvcache) accelerates training by caching tool execution results across rollouts using a Tool Call Graph. This avoids redundant sandbox calls when multiple rollouts share the same tool call prefix. Refer [Integration](./integration.md) for instructions to integrate TVCache with your training loop.
 
 Install the client library from the sibling directory:
 
