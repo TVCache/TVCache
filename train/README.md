@@ -82,7 +82,7 @@ This reads `questions.json`, `subset_answers.json`, and the contents of `videos/
 
 The training scripts load this file from `./EgoSchema/processed_videos.json`.
 
-## Step 3 (Optional): Install TVCache Client
+## Step 3: Install TVCache Client
 
 [TVCache](../tvcache) accelerates training by caching tool execution results across rollouts using a Tool Call Graph. This avoids redundant sandbox calls when multiple rollouts share the same tool call prefix.
 
